@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation with Moving Stars</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+      user-select: none;
+      perspective: 1000px;
+    }
+
+    .background-stars {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: twinkle 2s infinite ease-in-out, moveStars linear infinite;
+    }
+
+    @keyframes twinkle {
+
+      0%,
+      100% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes moveStars {
+      0% {
+        transform: translateY(0) translateX(0);
+      }
+
+      100% {
+        transform: translateY(20vh) translateX(-10vw);
+      }
+    }
+
+    .animation-container {
+      position: relative;
+      width: 120vw;
+      /* Tăng chiều rộng để dàn đều hơn */
+      height: 100vh;
+      transform-style: preserve-3d;
+      transform: rotateY(15deg) translateX(-10vw);
+      /* Thêm dịch chuyển bù */
+      transition: transform 0.1s ease-out;
+      cursor: grab;
+      will-change: transform;
+    }
+
+    .animation-container:active {
+      cursor: grabbing;
+    }
+
+    .text,
+    .heart,
+    .floating-image {
+      position: absolute;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      text-shadow: 0 0 10px white, 0 0 20px cyan;
+      opacity: 0.8;
+      animation: float linear forwards;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .heart {
+      color: red;
+      font-size: 20px;
+    }
+
+    .floating-image img {
+      display: block;
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 0 5px white);
+      height: auto;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(-10vh);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="background-stars"></div>
+  <div class="animation-container"></div>
+
+  <script>
+    const container = document.querySelector('.animation-container');
+    const backgroundStars = document.querySelector('.background-stars');
+    let rotateX = 0;
+    let rotateY = 0;
+    let scale = 1;
+    let posX = 0;
+    let posY = 0;
+    let isDragging = false;
+    let startX, startY;
+    let isRotateMode = false;
+
+    const messages = [
+   'Thank u for coming',
+      'I love u so much',
+      `From the moment I first saw you,\nI knew my heart would no longer listen to reason.`,
+      'Every love story is beautiful, but ours is my favorite.',
+      'I never knew what love was until I met you.',
+      'You are my sun, my moon, and all my stars.',
+      'I love you not only for what you are, but for what I am when I’m with you.',
+      'You make my world brighter just by being in it.',
+      'You are my dream come true.',
+      'To the world, you may be one person, but to me, you are the world.',
+      'You are my today and all of my tomorrows.',
+      'When I’m with you, I feel like I’m home.',
+      'I choose you, and I’ll choose you over and over again.'
+    ];
+
+    const colors = ['#FF0000', '#FF1493', '#EE30A7', '#00FF00', '#1E90FF'];
+
+    const images = [
+      'images/1.jpg',
+      'images/2.jpg',
+      'images/3.jpg',
+      'images/4.jpg',
+      'images/5.jpg'
+    ];
+
+    function getRandomColor() {
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function createFloatingElement() {
+      const element = document.createElement('div');
+      const rand = Math.random();
+
+      if (rand > 0.85 && images.length > 0) {
+        element.className = 'floating-image';
+        const img = document.createElement('img');
+        img.src = images[Math.floor(Math.random() * images.length)];
+        img.style.width = `${Math.random() * 110 + 50}px`;
+        element.appendChild(img);
+      } else if (rand > 0.7) {
+        element.className = 'heart';
+        element.textContent = '💗';
+        element.style.fontSize = `${Math.random() * 20 + 20}px`;
+      } else {
+        element.className = 'text';
+        element.textContent = messages[Math.floor(Math.random() * messages.length)];
+        element.style.fontSize = `${Math.random() * 20 + 10}px`;
+        element.style.color = getRandomColor();
+      }
+
+      element.style.left = `${Math.random() * 100}vw`;
+      element.style.animationDuration = `${Math.random() * 3 + 2}s`;
+      container.appendChild(element);
+
+      setTimeout(() => {
+        if (container.contains(element)) container.removeChild(element);
+      }, 5000);
+    }
+
+    setInterval(createFloatingElement, 250);
+
+    document.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      isRotateMode = e.ctrlKey;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      if (isRotateMode) {
+        rotateX -= deltaY * 0.1;
+        rotateY += deltaX * 0.1;
+      } else {
+        posX += deltaX;
+        posY += deltaY;
+      }
+
+      updateTransform();
+
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    document.addEventListener('wheel', (e) => {
+      scale += e.deltaY * -0.001;
+      scale = Math.min(Math.max(0.5, scale), 2);
+      updateTransform();
+    });
+
+    function updateTransform() {
+      container.style.transform =
+        `translate(${posX - 100}px, ${posY}px) ` + // Giảm thêm khoảng cách để lấp đầy bên phải
+        `rotateX(${rotateX}deg) rotateY(${25 + rotateY}deg) scale(${scale})`;
+    }
+
+    function createStars() {
+      const totalStars = 400;
+      for (let i = 0; i < totalStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 2 + 1; // Kích thước ngẫu nhiên
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.top = `${Math.random() * 100}vh`;
+        star.style.left = `${Math.random() * 100}vw`;
+        star.style.animationDuration = `${Math.random() * 20 + 10}s`; // Chuyển động ngẫu nhiên
+        backgroundStars.appendChild(star);
+      }
+    }
+
+    createStars();
+  </script>
+</body>
+
+</html>
